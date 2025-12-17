@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapa Global de Festivais Psytrance – CSV Automático</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    body { margin: 0; padding: 0; background: #000; }
+    #map { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<script>
+  // Inicializa o mapa
+  const map = L.map('map').setView([20, 0], 2);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Ícone dos festivais
+  const iconFestival = L.icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/854/854878.png',
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -24]
+  });
+
+  // Carrega o CSV automaticamente
+  Papa.parse('DATA-TRANCE - Folha1.csv', {
+    download: true,
+    header: true,
+    complete: function(results) {
+      results.data.forEach(festival => {
+        if (!festival['Coordenadas (Aproximadas)']) return;
+
+        const coords = festival['Coordenadas (Aproximadas)'].split(',');
+        if (coords.length !== 2) return;
+
+        const lat = parseFloat(coords[0]);
+        const lon = parseFloat(coords[1]);
+        if (isNaN(lat) || isNaN(lon)) return;
+
+        L.marker([lat, lon], { icon: iconFestival })
+          .addTo(map)
+          .bindPopup(`
+            <strong>${festival['Nome do Festival']}</strong><br>
+            ${festival['País']} — ${festival['Continente']}<br>
+            <em>${festival['Vertentes'] || ''}</em>
+          `);
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
